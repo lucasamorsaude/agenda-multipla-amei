@@ -122,7 +122,7 @@ def run_full_process(log_placeholder):
             log(f"Mensagem enviada com sucesso para {nome}.")
             
             if i < total_registros - 1:
-                tempo_pausa = random.randint(5, 10)
+                tempo_pausa = random.randint(30, 60)
                 log(f"Pausa de {tempo_pausa} segundos...")
                 time.sleep(tempo_pausa)
         

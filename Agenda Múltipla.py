@@ -7,7 +7,7 @@ from login_auth import get_auth_new
 
 # --- 1. CONFIGURAÇÃO E FUNÇÕES ---
 
-st.set_page_config(page_title="Agenda Consolidada", layout="wide")
+st.set_page_config(page_title="Agenda Múltipla", layout="wide")
 
 auth = get_auth_new()
 
@@ -73,7 +73,7 @@ def get_slots_for_professional(professional_id, selected_date):
 
 # --- 2. INTERFACE PRINCIPAL DO SITE ---
 
-st.title('📅 Agenda Consolidada do Dia')
+st.title('📅 Agenda Múltipla')
 st.markdown("Visualize todos os horários (livres, agendados, etc.) lado a lado. **Clique no nome do profissional para abrir no sistema Amei.**")
 
 AGENDA_URL_TEMPLATE = "https://amei.amorsaude.com.br/schedule/schedule-appointment?profissionalId={}&date={}"
