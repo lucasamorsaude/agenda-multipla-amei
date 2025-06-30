@@ -14,7 +14,7 @@ auth = get_auth_new()
 # As credenciais continuam sendo lidas do mesmo arquivo secrets.toml
 HEADERS = {
     'Authorization': f"Bearer {auth}",
-    'Cookie': st.secrets["api_credentials"]["cookie"]
+    'Cookie': st.secrets["api_credentials_dashboard"]["cookie"]
 }
 
 # URLs das APIs que vamos usar
