@@ -117,7 +117,7 @@ def run_full_process(log_placeholder):
             mensagem_personalizada = template_mensagem.format(nome=nome, profissional=linha.get('Profissional'), data=linha.get('Data'), hora=linha.get('Hora'))
             log(f"({i + 1}/{total_registros}) Preparando para enviar para: {nome} ({telefone_formatado})")
             
-            # enviar_mensagem_digisac(telefone_formatado, mensagem_personalizada) # Descomente para produção
+            enviar_mensagem_digisac(telefone_formatado, mensagem_personalizada) # Descomente para produção
             time.sleep(1) # Simulação de envio
             log(f"Mensagem enviada com sucesso para {nome}.")
             
