@@ -70,6 +70,17 @@ def get_slots_for_professional(professional_id, selected_date):
             return []
     except requests.exceptions.RequestException:
         return []
+    
+
+def create_html_progress_bar(percentage, color):
+    # Garante que a porcentagem esteja entre 0 e 100
+    percentage = max(0, min(100, percentage))
+    return f"""
+    <div style="width: 100%; background-color: #e0e0e0; border-radius: 5px; overflow: hidden; height: 20px; margin-top: 5px; margin-bottom: 10px;">
+        <div style="width: {percentage}%; background-color: {color}; height: 100%; border-radius: 5px; text-align: center; color: white; line-height: 20px; font-size: 0.8em;">
+        </div>
+    </div>
+    """
 
 # --- 2. INTERFACE PRINCIPAL DO SITE ---
 
@@ -155,6 +166,72 @@ if st.button("Buscar Agendas"):
                 styled_df = df_transposto.style.apply(highlight_total, axis=1)
 
                 st.dataframe(styled_df, use_container_width=True)
+
+            
+            # --- Lógica para % de confirmação e barra de progresso (USANDO HTML CUSTOMIZADO) ---
+            with st.expander("📊 Confirmação Geral de Agendamentos", expanded=False):
+                # Criação das abas (tabs)
+                tab1, tab2 = st.tabs(["Confirmação Total", "Confirmação por Profissional"])
+
+                with tab1: # Conteúdo da Confirmação Total
+                    total_agendado_geral = df_resumo["Total Agendado"].sum() if "Total Agendado" in df_resumo.columns else 0
+                    total_confirmado_geral = df_resumo["Marcado - confirmado"].sum() if "Marcado - confirmado" in df_resumo.columns else 0
+
+
+                    st.subheader("Visão Geral")
+
+                    if total_agendado_geral > 0:
+                        percentual_confirmacao = (total_confirmado_geral / total_agendado_geral) * 100
+                        st.write(f"**Total de Agendados:** {total_agendado_geral}")
+                        st.write(f"**Total de Confirmados:** {total_confirmado_geral}")
+                        st.write(f"**Percentual de Confirmação:** {percentual_confirmacao:.2f}%")
+
+                        progress_color = ""
+                        if percentual_confirmacao < 60:
+                            progress_color = "#FF4B4B"  # Vermelho mais forte
+                        elif 60 <= percentual_confirmacao < 80:
+                            progress_color = "#FFA500"  # Laranja (amarelo)
+                        else:
+                            progress_color = "#4CAF50"  # Verde mais forte
+                        
+                        # Usa a função auxiliar para gerar a barra HTML
+                        st.markdown(create_html_progress_bar(percentual_confirmacao, progress_color), unsafe_allow_html=True)
+                        
+
+
+                    else:
+                        st.info("Não há agendamentos válidos (exceto Livre/Bloqueado) para calcular a porcentagem de confirmação.")
+
+                with tab2: # Conteúdo da Confirmação por Profissional
+                    st.subheader("Confirmação por Profissional")
+
+                    if not df_resumo.empty:
+                        for profissional, row in df_resumo.iterrows():
+                            agendados_prof = row.get("Total Agendado", 0)
+                            confirmados_prof = row.get("Marcado - confirmado", 0)
+                            
+                            percentual_prof = 0
+                            if agendados_prof > 0:
+                                percentual_prof = (confirmados_prof / agendados_prof) * 100
+                            
+                            st.markdown(f"{profissional}")
+                            st.write(f"  Total Agendado: {agendados_prof}, Confirmados: {confirmados_prof}")
+                            st.write(f"  Percentual de Confirmação: {percentual_prof:.2f}%")
+
+                            progress_color_prof = ""
+                            if percentual_prof < 60:
+                                progress_color_prof = "#FF4B4B"
+                            elif 60 <= percentual_prof < 80:
+                                progress_color_prof = "#FFA500"
+                            else:
+                                progress_color_prof = "#4CAF50"
+                            
+                            # Usa a função auxiliar para gerar a barra HTML para cada profissional
+                            st.markdown(create_html_progress_bar(percentual_prof, progress_color_prof), unsafe_allow_html=True)
+                            st.markdown("---") # Separador para cada profissional
+                    else:
+                        st.info("Nenhum dado de confirmação por profissional disponível.")
+
 
 
 
