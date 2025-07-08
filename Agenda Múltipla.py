@@ -169,16 +169,20 @@ if st.button("Buscar Agendas"):
 
             
             # --- Lógica para % de confirmação e barra de progresso (USANDO HTML CUSTOMIZADO) ---
-            with st.expander("📊 Confirmação Geral de Agendamentos", expanded=False):
+            with st.expander("📊 Confirmação Geral de Agendamentos e Ocupação", expanded=False): # Nome do expander ajustado
                 # Criação das abas (tabs)
-                tab1, tab2 = st.tabs(["Confirmação Total", "Confirmação por Profissional"])
+                tab1, tab2, tab3, tab4 = st.tabs([
+                    "Confirmação Total", 
+                    "Confirmação por Profissional", 
+                    "Taxa de Ocupação Total", # Renomeado para clareza
+                    "Taxa de Ocupação por Profissional" # Nova aba
+                ])
 
                 with tab1: # Conteúdo da Confirmação Total
+                    st.subheader("Visão Geral de Confirmação")
                     total_agendado_geral = df_resumo["Total Agendado"].sum() if "Total Agendado" in df_resumo.columns else 0
                     total_confirmado_geral = df_resumo["Marcado - confirmado"].sum() if "Marcado - confirmado" in df_resumo.columns else 0
 
-
-                    st.subheader("Visão Geral")
 
                     if total_agendado_geral > 0:
                         percentual_confirmacao = (total_confirmado_geral / total_agendado_geral) * 100
@@ -197,7 +201,6 @@ if st.button("Buscar Agendas"):
                         # Usa a função auxiliar para gerar a barra HTML
                         st.markdown(create_html_progress_bar(percentual_confirmacao, progress_color), unsafe_allow_html=True)
                         
-
 
                     else:
                         st.info("Não há agendamentos válidos (exceto Livre/Bloqueado) para calcular a porcentagem de confirmação.")
@@ -231,10 +234,68 @@ if st.button("Buscar Agendas"):
                             st.markdown("---") # Separador para cada profissional
                     else:
                         st.info("Nenhum dado de confirmação por profissional disponível.")
+                
+                with tab3: # Nova aba para Taxa de Ocupação Total
+                    st.subheader("Taxa de Ocupação Geral")
+
+                    # Numerador: "agendamentos gerais, incluindo encaixes" (Total Agendado)
+                    total_ocupados = df_resumo["Total Agendado"].sum() if "Total Agendado" in df_resumo.columns else 0
+                    
+                    # Denominador: Soma de TODOS os slots (todas as colunas de status)
+                    all_status_cols = [col for col in df_resumo.columns if col not in ["Profissional", "Total Agendado"]]
+                    total_slots_disponiveis = df_resumo[all_status_cols].sum().sum()
 
 
+                    if total_slots_disponiveis > 0:
+                        percentual_ocupacao = (total_ocupados / total_slots_disponiveis) * 100
+                        st.write(f"**Total de Horários Ocupados:** {total_ocupados}")
+                        st.write(f"**Total de Slots Disponíveis:** {total_slots_disponiveis}")
+                        st.write(f"**Taxa de Ocupação:** {percentual_ocupacao:.2f}%")
 
+                        # Definição da cor da barra de progresso para a taxa de ocupação
+                        ocupacao_color = ""
+                        if percentual_ocupacao < 60:
+                            ocupacao_color = "#FF4B4B"  # Vermelho
+                        elif 60 <= percentual_ocupacao < 80:
+                            ocupacao_color = "#FFA500"  # Laranja
+                        else:
+                            ocupacao_color = "#4CAF50"  # Verde
+                        
+                        st.markdown(create_html_progress_bar(percentual_ocupacao, ocupacao_color), unsafe_allow_html=True)
+                    else:
+                        st.info("Não há slots disponíveis para calcular a taxa de ocupação.")
 
+                with tab4: # Nova aba para Taxa de Ocupação por Profissional
+                    st.subheader("Taxa de Ocupação por Profissional")
+
+                    if not df_resumo.empty:
+                        for profissional, row in df_resumo.iterrows():
+                            # Horários ocupados para o profissional
+                            ocupados_prof = row.get("Total Agendado", 0)
+                            
+                            # Total de slots para o profissional (todas as contagens de status para a linha do profissional)
+                            total_slots_prof = row[all_status_cols].sum() # all_status_cols já foi definida e exclui "Profissional", "Total Agendado"
+                            
+                            percentual_ocupacao_prof = 0
+                            if total_slots_prof > 0:
+                                percentual_ocupacao_prof = (ocupados_prof / total_slots_prof) * 100
+                            
+                            st.markdown(f"{profissional}")
+                            st.write(f"  Horários Ocupados: {ocupados_prof}, Total de Slots: {total_slots_prof}")
+                            st.write(f"  Taxa de Ocupação: {percentual_ocupacao_prof:.2f}%")
+
+                            ocupacao_color_prof = ""
+                            if percentual_ocupacao_prof < 60:
+                                ocupacao_color_prof = "#FF4B4B"
+                            elif 60 <= percentual_ocupacao_prof < 80:
+                                ocupacao_color_prof = "#FFA500"
+                            else:
+                                ocupacao_color_prof = "#4CAF50"
+                            
+                            st.markdown(create_html_progress_bar(percentual_ocupacao_prof, ocupacao_color_prof), unsafe_allow_html=True)
+                            st.markdown("---") # Separador para cada profissional
+                    else:
+                        st.info("Nenhum dado de ocupação por profissional disponível.")
 
 
             st.markdown("---")
